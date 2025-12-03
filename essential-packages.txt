@@ -75,7 +75,6 @@ edb-debugger
 metasploit
 searchsploit
 beef
-armitage
 sqlmap
 social-engineer-toolkit
 
