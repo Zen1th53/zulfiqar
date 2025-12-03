@@ -23,7 +23,6 @@ jobs:
       run: |
         useradd -m builder
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-        # GITHUB_WORKSPACE ham builderga tegishli qilinadi
         chown -R builder:builder "$GITHUB_WORKSPACE"
         chmod -R u+rwx "$GITHUB_WORKSPACE"
 
@@ -51,7 +50,9 @@ jobs:
 
             sudo -u builder makepkg -fs --noconfirm || echo "$pkg build failed" >> "$GITHUB_WORKSPACE/build-failures.txt"
 
+            # Paket build qilingach, artifacts papkasiga ko'chirish
             mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+
             cd "$GITHUB_WORKSPACE"
           else
             echo "No PKGBUILD found in $pkg, skipping..."
