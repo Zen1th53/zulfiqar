@@ -20,13 +20,6 @@ jobs:
       run: |
         pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg archlinux-keyring
 
-    - name: Install Yay
-      run: |
-        git clone https://aur.archlinux.org/yay.git /tmp/yay
-        cd /tmp/yay
-        makepkg -si --noconfirm
-        cd $GITHUB_WORKSPACE
-
     - name: Checkout Code
       uses: actions/checkout@v4
 
