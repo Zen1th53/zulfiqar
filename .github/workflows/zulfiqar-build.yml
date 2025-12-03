@@ -75,7 +75,13 @@ jobs:
             # AGGRESSIVE CLEANUP - Remove everything from build directory
             cd "$GITHUB_WORKSPACE"
             echo "Cleaning up $pkg_name..."
+            
+            # Remove build artifacts from package directory
             rm -rf "$pkg/src" "$pkg/pkg" "$pkg"/*.log 2>/dev/null || true
+            
+            # CRITICAL: Remove ANY remaining .pkg.tar.zst files from workspace
+            # (in case mv didn't work or files are elsewhere)
+            find "$GITHUB_WORKSPACE/packages" -name "*.pkg.tar.zst" -delete 2>/dev/null || true
             
             # Clean pacman cache
             pacman -Scc --noconfirm >/dev/null 2>&1 || true
@@ -86,7 +92,8 @@ jobs:
             # Show disk status
             disk_used=$(df -h / | tail -1 | awk '{print $5}')
             disk_avail=$(df -h / | tail -1 | awk '{print $4}')
-            echo "Disk: $disk_used used, $disk_avail available"
+            artifacts_count=$(ls -1 "$GITHUB_WORKSPACE/artifacts"/*.pkg.tar.zst 2>/dev/null | wc -l)
+            echo "Disk: $disk_used used, $disk_avail available | Artifacts: $artifacts_count packages"
             echo ""
           fi
         done
