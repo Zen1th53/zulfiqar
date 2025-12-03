@@ -29,62 +29,98 @@ jobs:
         chown -R builder:builder "$GITHUB_WORKSPACE"
         chmod -R u+rwX "$GITHUB_WORKSPACE"
 
-    - name: Install yay (AUR helper)
-      run: |
-        git clone https://aur.archlinux.org/yay.git /tmp/yay
-        chown -R builder:builder /tmp/yay
-        cd /tmp/yay
-        sudo -u builder makepkg -fs --noconfirm
-        sudo pacman -U --noconfirm yay-*.pkg.tar.zst
-
-    - name: Build packages
+    - name: Create artifacts directory
       run: |
         mkdir -p "$GITHUB_WORKSPACE/artifacts"
-        chmod -R u+rwx "$GITHUB_WORKSPACE/artifacts"
+        chmod 777 "$GITHUB_WORKSPACE/artifacts"
         > "$GITHUB_WORKSPACE/build-failures.txt"
+
+    - name: Build packages incrementally
+      run: |
+        total=$(find "$GITHUB_WORKSPACE/packages" -maxdepth 1 -type d -name "*" | wc -l)
+        current=0
+        success=0
+        failed=0
 
         for pkg in "$GITHUB_WORKSPACE/packages/"*/; do
           if [ -f "$pkg/PKGBUILD" ]; then
+            current=$((current + 1))
             pkg_name=$(basename "$pkg")
-            echo "Building $pkg_name..."
+            echo "========================================="
+            echo "[$current/$total] Building: $pkg_name"
+            echo "========================================="
             
-            # Ensure builder has write permissions
+            # Set permissions
             chown -R builder:builder "$pkg"
             chmod -R u+rwX "$pkg"
             
             cd "$pkg"
             
-            if sudo -u builder makepkg -fs --noconfirm 2>&1; then
-              echo "✓ Build successful: $pkg_name"
-              mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+            # Build package
+            if sudo -u builder makepkg -fs --noconfirm 2>&1 | tee build.log; then
+              echo "✓ SUCCESS: $pkg_name"
+              success=$((success + 1))
+              
+              # Move built package to artifacts IMMEDIATELY
+              if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+                mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/"
+                echo "→ Package moved to artifacts"
+              fi
             else
-              echo "✗ Build failed: $pkg_name" | tee -a "$GITHUB_WORKSPACE/build-failures.txt"
+              echo "✗ FAILED: $pkg_name"
+              failed=$((failed + 1))
+              echo "$pkg_name" >> "$GITHUB_WORKSPACE/build-failures.txt"
             fi
             
-            # Cleanup to save disk space
+            # AGGRESSIVE CLEANUP - Remove everything from build directory
             cd "$GITHUB_WORKSPACE"
-            rm -rf "$pkg/src" "$pkg/pkg" 2>/dev/null || true
-            pacman -Scc --noconfirm 2>/dev/null || true
-            rm -rf /tmp/* 2>/dev/null || true
+            echo "Cleaning up $pkg_name..."
+            rm -rf "$pkg/src" "$pkg/pkg" "$pkg"/*.log 2>/dev/null || true
             
-            echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}' ) used"
+            # Clean pacman cache
+            pacman -Scc --noconfirm >/dev/null 2>&1 || true
+            
+            # Clean temp files
+            rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
+            
+            # Show disk status
+            disk_used=$(df -h / | tail -1 | awk '{print $5}')
+            disk_avail=$(df -h / | tail -1 | awk '{print $4}')
+            echo "Disk: $disk_used used, $disk_avail available"
+            echo ""
           fi
         done
+        
+        echo "========================================="
+        echo "BUILD SUMMARY"
+        echo "========================================="
+        echo "Total packages: $current"
+        echo "Successful: $success"
+        echo "Failed: $failed"
+        echo "========================================="
 
     - name: Create repository database
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
-        chmod -R u+rwx "$GITHUB_WORKSPACE/artifacts"
+        
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+          echo "Creating repository database..."
           repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst
+          echo "✓ Repository database created"
+          
+          # Show package count
+          pkg_count=$(ls -1 *.pkg.tar.zst 2>/dev/null | wc -l)
+          echo "Total packages in repository: $pkg_count"
         else
-          echo "No packages built, skipping repo-add."
+          echo "⚠ No packages built, skipping repo-add"
         fi
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: zulfiqar-packages
         path: |
           artifacts/
           build-failures.txt
+        retention-days: 30
