@@ -1,14 +1,58 @@
-name: Zulfiqar OS Build
+name: Zulfiqar OS Build (Batched)
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      batch_number:
+        description: 'Batch number to build (1-64)'
+        required: false
+        default: '1'
 
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Generate batch matrix
+        id: set-matrix
+        run: |
+          # Count total packages
+          total=$(find packages -maxdepth 1 -type d | tail -n +2 | wc -l)
+          batch_size=50
+          batches=$(( (total + batch_size - 1) / batch_size ))
+          
+          echo "Total packages: $total"
+          echo "Batches needed: $batches"
+          
+          # Generate matrix (limit to first 10 batches for now to avoid too many jobs)
+          matrix="["
+          for i in $(seq 1 $batches); do
+            if [ $i -le 10 ]; then
+              matrix="$matrix$i,"
+            fi
+          done
+          matrix="${matrix%,}]"
+          
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          echo "Generated matrix: $matrix"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3  # Build 3 batches at a time
+      fail-fast: false
+      matrix:
+        batch: ${{fromJson(needs.prepare.outputs.matrix)}}
+    
     container:
       image: archlinux:latest
 
@@ -29,42 +73,53 @@ jobs:
         chown -R builder:builder "$GITHUB_WORKSPACE"
         chmod -R u+rwX "$GITHUB_WORKSPACE"
 
-    - name: Create upload directory
+    - name: Build batch ${{ matrix.batch }}
       run: |
-        mkdir -p "$GITHUB_WORKSPACE/upload"
-        chmod 777 "$GITHUB_WORKSPACE/upload"
+        batch_num=${{ matrix.batch }}
+        batch_size=50
+        start=$(( (batch_num - 1) * batch_size + 1 ))
+        end=$(( batch_num * batch_size ))
+        
+        mkdir -p "$GITHUB_WORKSPACE/artifacts"
+        chmod 777 "$GITHUB_WORKSPACE/artifacts"
         > "$GITHUB_WORKSPACE/build-failures.txt"
-
-    - name: Build packages incrementally
-      run: |
-        total=$(find "$GITHUB_WORKSPACE/packages" -maxdepth 1 -type d -name "*" | wc -l)
+        
+        echo "========================================="
+        echo "BATCH $batch_num: Building packages $start to $end"
+        echo "========================================="
+        
+        # Get all package directories
+        all_pkgs=($(find "$GITHUB_WORKSPACE/packages" -maxdepth 1 -type d -name "*" | sort))
+        
         current=0
         success=0
         failed=0
-
-        for pkg in "$GITHUB_WORKSPACE/packages/"*/; do
+        
+        for pkg in "${all_pkgs[@]}"; do
+          current=$((current + 1))
+          
+          # Skip if not in this batch
+          if [ $current -lt $start ] || [ $current -gt $end ]; then
+            continue
+          fi
+          
           if [ -f "$pkg/PKGBUILD" ]; then
-            current=$((current + 1))
             pkg_name=$(basename "$pkg")
             echo "========================================="
-            echo "[$current/$total] Building: $pkg_name"
+            echo "[$current] Building: $pkg_name"
             echo "========================================="
             
-            # Set permissions
             chown -R builder:builder "$pkg"
             chmod -R u+rwX "$pkg"
-            
             cd "$pkg"
             
-            # Build package
             if sudo -u builder makepkg -fs --noconfirm 2>&1 | tee build.log; then
               echo "✓ SUCCESS: $pkg_name"
               success=$((success + 1))
               
-              # Move to upload directory IMMEDIATELY
               if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-                mv *.pkg.tar.zst "$GITHUB_WORKSPACE/upload/"
-                echo "→ Package ready for upload"
+                mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/"
+                echo "→ Package moved to artifacts"
               fi
             else
               echo "✗ FAILED: $pkg_name"
@@ -72,66 +127,43 @@ jobs:
               echo "$pkg_name" >> "$GITHUB_WORKSPACE/build-failures.txt"
             fi
             
-            # AGGRESSIVE CLEANUP
+            # Cleanup
             cd "$GITHUB_WORKSPACE"
             rm -rf "$pkg/src" "$pkg/pkg" "$pkg"/*.log 2>/dev/null || true
             find "$GITHUB_WORKSPACE/packages" -name "*.pkg.tar.zst" -delete 2>/dev/null || true
             pacman -Scc --noconfirm >/dev/null 2>&1 || true
             rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
             
-            # Upload every 10 packages to prevent disk overflow
-            upload_count=$(ls -1 "$GITHUB_WORKSPACE/upload"/*.pkg.tar.zst 2>/dev/null | wc -l)
-            if [ $upload_count -ge 10 ]; then
-              echo "📤 Uploading batch of $upload_count packages..."
-              
-              # Create temporary artifact directory
-              mkdir -p /tmp/batch-upload
-              mv "$GITHUB_WORKSPACE/upload"/*.pkg.tar.zst /tmp/batch-upload/ 2>/dev/null || true
-              
-              # Note: Actual upload happens in separate step
-              # For now, move back (GitHub Actions doesn't support mid-workflow uploads easily)
-              mv /tmp/batch-upload/*.pkg.tar.zst "$GITHUB_WORKSPACE/upload/" 2>/dev/null || true
-              rm -rf /tmp/batch-upload
-            fi
-            
-            # Show disk status
             disk_used=$(df -h / | tail -1 | awk '{print $5}')
             disk_avail=$(df -h / | tail -1 | awk '{print $4}')
-            echo "Disk: $disk_used used, $disk_avail available | Ready: $upload_count packages"
+            echo "Disk: $disk_used used, $disk_avail available"
             echo ""
           fi
         done
         
         echo "========================================="
-        echo "BUILD SUMMARY"
+        echo "BATCH $batch_num SUMMARY"
         echo "========================================="
-        echo "Total packages: $current"
         echo "Successful: $success"
         echo "Failed: $failed"
         echo "========================================="
 
-    - name: Create repository database
+    - name: Create repository database for batch
       run: |
-        cd "$GITHUB_WORKSPACE/upload"
+        cd "$GITHUB_WORKSPACE/artifacts"
         
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-          echo "Creating repository database..."
-          repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst
-          echo "✓ Repository database created"
-          
+          repo-add -n -R zulfiqar-batch${{ matrix.batch }}.db.tar.gz *.pkg.tar.zst
           pkg_count=$(ls -1 *.pkg.tar.zst 2>/dev/null | wc -l)
-          echo "Total packages in repository: $pkg_count"
-        else
-          echo "⚠ No packages built"
+          echo "✓ Batch ${{ matrix.batch }}: $pkg_count packages"
         fi
 
-    - name: Upload all packages
+    - name: Upload batch artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: zulfiqar-packages
+        name: zulfiqar-batch-${{ matrix.batch }}
         path: |
-          upload/
+          artifacts/
           build-failures.txt
         retention-days: 90
-        compression-level: 0
