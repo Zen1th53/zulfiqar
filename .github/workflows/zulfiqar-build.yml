@@ -19,15 +19,15 @@ jobs:
     - name: Install base dependencies
       run: pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg
 
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup builder user
       run: |
         useradd -m builder
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         chown -R builder:builder "$GITHUB_WORKSPACE"
-        chmod -R u+rwx "$GITHUB_WORKSPACE"
-
-    - name: Checkout code
-      uses: actions/checkout@v4
+        chmod -R u+rwX "$GITHUB_WORKSPACE"
 
     - name: Install yay (AUR helper)
       run: |
@@ -43,19 +43,31 @@ jobs:
         chmod -R u+rwx "$GITHUB_WORKSPACE/artifacts"
         > "$GITHUB_WORKSPACE/build-failures.txt"
 
-        for pkg in "$GITHUB_WORKSPACE/packages/"*; do
+        for pkg in "$GITHUB_WORKSPACE/packages/"*/; do
           if [ -f "$pkg/PKGBUILD" ]; then
-            echo "Building package in $pkg..."
+            pkg_name=$(basename "$pkg")
+            echo "Building $pkg_name..."
+            
+            # Ensure builder has write permissions
+            chown -R builder:builder "$pkg"
+            chmod -R u+rwX "$pkg"
+            
             cd "$pkg"
-
-            sudo -u builder makepkg -fs --noconfirm || echo "$pkg build failed" >> "$GITHUB_WORKSPACE/build-failures.txt"
-
-            # Paket build qilingach, artifacts papkasiga ko'chirish
-            mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
-
+            
+            if sudo -u builder makepkg -fs --noconfirm 2>&1; then
+              echo "✓ Build successful: $pkg_name"
+              mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+            else
+              echo "✗ Build failed: $pkg_name" | tee -a "$GITHUB_WORKSPACE/build-failures.txt"
+            fi
+            
+            # Cleanup to save disk space
             cd "$GITHUB_WORKSPACE"
-          else
-            echo "No PKGBUILD found in $pkg, skipping..."
+            rm -rf "$pkg/src" "$pkg/pkg" 2>/dev/null || true
+            pacman -Scc --noconfirm 2>/dev/null || true
+            rm -rf /tmp/* 2>/dev/null || true
+            
+            echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}' ) used"
           fi
         done
 
