@@ -148,6 +148,17 @@ jobs:
         echo "Failed: $failed"
         echo "========================================="
 
+    - name: Sanitize filenames
+      run: |
+        cd "$GITHUB_WORKSPACE/artifacts"
+        for f in *; do
+          if [[ "$f" == *":"* ]]; then
+            new_name="${f//:/+}"
+            echo "Renaming $f to $new_name"
+            mv "$f" "$new_name"
+          fi
+        done
+
     - name: Create repository database for batch
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
@@ -167,3 +178,38 @@ jobs:
           artifacts/
           build-failures.txt
         retention-days: 90
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: zulfiqar-batch-*
+          path: all-packages
+          merge-multiple: true
+      
+      - name: Create merged repository
+        run: |
+          cd all-packages
+          # Remove batch databases if present
+          rm -f *.db.tar.gz *.db *.files.tar.gz *.files
+          
+          # Create unified repository
+          if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+            echo "Creating unified repository database..."
+            repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst
+            
+            pkg_count=$(ls -1 *.pkg.tar.zst 2>/dev/null | wc -l)
+            echo "Total packages in unified repository: $pkg_count"
+          else
+            echo "No packages found to merge"
+          fi
+          
+      - name: Upload unified repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: zulfiqar-repository
+          path: all-packages/
