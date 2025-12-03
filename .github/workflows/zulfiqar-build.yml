@@ -16,8 +16,21 @@ jobs:
     - name: Update System
       run: pacman -Syu --noconfirm
 
-    - name: Install Dependencies
-      run: pacman -S --noconfirm base-devel git sudo pacman-contrib
+    - name: Install Base Dependencies
+      run: |
+        pacman -S --noconfirm base-devel git sudo pacman-contrib wget
+
+    - name: Setup Chaotic AUR
+      run: |
+        pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+        pacman-key --lsign-key FBA220DFC880C036
+        pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+        echo -e '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
+        pacman -Syu --noconfirm
+
+    - name: Install Additional Dependencies
+      run: |
+        pacman -S --noconfirm git-filter-repo gtk3 libpulse libva-intel-driver chromium python python-pip
 
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -31,6 +44,9 @@ jobs:
     - name: Build Packages
       run: |
         mkdir -p "$GITHUB_WORKSPACE/artifacts"
+        FAILED_FILE="$GITHUB_WORKSPACE/artifacts/failed_builds.txt"
+        echo "" > "$FAILED_FILE"
+
         echo "Starting build for all packages..."
 
         for pkg in "$GITHUB_WORKSPACE/packages/"*; do
@@ -38,15 +54,24 @@ jobs:
             echo "Building package in $pkg..."
             cd "$pkg"
 
-            sudo -u builder makepkg -fs --noconfirm || echo "Build failed for $pkg"
-
-            mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+            if ! sudo -u builder makepkg -fs --noconfirm; then
+              echo "Build failed for $pkg" | tee -a "$FAILED_FILE"
+            else
+              mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+            fi
 
             cd "$GITHUB_WORKSPACE"
           else
             echo "No PKGBUILD found in $pkg, skipping..."
           fi
         done
+
+        if [ -s "$FAILED_FILE" ]; then
+          echo "Some packages failed to build. See failed_builds.txt for details."
+        else
+          echo "All packages built successfully."
+          rm "$FAILED_FILE"
+        fi
 
     - name: Create Repository Database
       run: |
