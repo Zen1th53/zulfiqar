@@ -202,6 +202,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      contents: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -232,3 +234,13 @@ jobs:
         with:
           name: zulfiqar-repository
           path: all-packages/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./all-packages
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy Zulfiqar OS repository [skip ci]'
