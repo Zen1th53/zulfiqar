@@ -22,15 +22,11 @@ jobs:
 
     - name: Setup Chaotic AUR Repo
       run: |
-        # Import Chaotic AUR key
         pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
         pacman-key --lsign-key FBA220DFC880C036
-
-        # Add Chaotic repo
         echo "[chaotic-aur]" >> /etc/pacman.conf
         echo "SigLevel = Never" >> /etc/pacman.conf
         echo "Server = https://cdn-mirror.chaotic.cx/chaotic-aur/\$arch" >> /etc/pacman.conf
-
         pacman -Syy --noconfirm
 
     - name: Checkout Code
@@ -54,7 +50,8 @@ jobs:
             echo "Building package in $pkg..."
             cd "$pkg"
 
-            if ! sudo -u builder makepkg -fs --noconfirm; then
+            # makepkg will NOT sign packages
+            if ! sudo -u builder makepkg -fs --noconfirm --skippgpcheck; then
               echo "$pkg" >> "$GITHUB_WORKSPACE/failed_packages.txt"
               echo "Build failed for $pkg, moving to next..."
             fi
