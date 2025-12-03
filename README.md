@@ -187,3 +187,4 @@ platform built on Arch Linux.
 Whether you're conducting a security audit, performing vulnerability
 assessments, or learning cybersecurity, Zulfiqar OS provides all the tools you
 need to succeed.
+# zulfiqar
