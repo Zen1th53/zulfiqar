@@ -20,15 +20,6 @@ jobs:
       run: |
         pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg archlinux-keyring
 
-    - name: Setup Chaotic AUR Repo
-      run: |
-        pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-        pacman-key --lsign-key FBA220DFC880C036
-        echo "[chaotic-aur]" >> /etc/pacman.conf
-        echo "SigLevel = Never" >> /etc/pacman.conf
-        echo "Server = https://cdn-mirror.chaotic.cx/chaotic-aur/$arch" >> /etc/pacman.conf
-        pacman -Syy --noconfirm
-
     - name: Install Yay
       run: |
         git clone https://aur.archlinux.org/yay.git /tmp/yay
