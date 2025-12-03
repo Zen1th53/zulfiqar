@@ -16,21 +16,8 @@ jobs:
     - name: Update System
       run: pacman -Syu --noconfirm
 
-    - name: Install Base Dependencies
-      run: |
-        pacman -S --noconfirm base-devel git sudo pacman-contrib wget
-
-    - name: Setup Chaotic AUR
-      run: |
-        pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-        pacman-key --lsign-key FBA220DFC880C036
-        pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
-        echo -e '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
-        pacman -Syu --noconfirm
-
-    - name: Install Additional Dependencies
-      run: |
-        pacman -S --noconfirm git-filter-repo gtk3 libpulse libva-intel-driver chromium python python-pip
+    - name: Install Dependencies
+      run: pacman -S --noconfirm base-devel git sudo pacman-contrib
 
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -41,43 +28,36 @@ jobs:
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         chown -R builder:builder $GITHUB_WORKSPACE
 
-    - name: Build Packages
+    - name: Initialize Artifacts and Fail List
       run: |
         mkdir -p "$GITHUB_WORKSPACE/artifacts"
-        FAILED_FILE="$GITHUB_WORKSPACE/artifacts/failed_builds.txt"
-        echo "" > "$FAILED_FILE"
+        echo "" > "$GITHUB_WORKSPACE/failed_packages.txt"
 
-        echo "Starting build for all packages..."
-
+    - name: Build Packages
+      run: |
         for pkg in "$GITHUB_WORKSPACE/packages/"*; do
           if [ -f "$pkg/PKGBUILD" ]; then
             echo "Building package in $pkg..."
             cd "$pkg"
 
             if ! sudo -u builder makepkg -fs --noconfirm; then
-              echo "Build failed for $pkg" | tee -a "$FAILED_FILE"
-            else
-              mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+              echo "$pkg" >> "$GITHUB_WORKSPACE/failed_packages.txt"
+              echo "Build failed for $pkg, moving to next..."
             fi
 
+            mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
             cd "$GITHUB_WORKSPACE"
           else
-            echo "No PKGBUILD found in $pkg, skipping..."
+            echo "No PKGBUILD in $pkg, skipping..."
           fi
         done
-
-        if [ -s "$FAILED_FILE" ]; then
-          echo "Some packages failed to build. See failed_builds.txt for details."
-        else
-          echo "All packages built successfully."
-          rm "$FAILED_FILE"
-        fi
 
     - name: Create Repository Database
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-          repo-add zulfiqar.db.tar.gz *.pkg.tar.zst
+          # Sign qilmasdan repo yarating
+          repo-add --remove-signature zulfiqar.db.tar.gz *.pkg.tar.zst
         else
           echo "No packages built, skipping repo-add."
         fi
@@ -86,4 +66,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: zulfiqar-packages
-        path: artifacts/
+        path: |
+          artifacts/
+          failed_packages.txt
