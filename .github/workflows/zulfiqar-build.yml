@@ -16,7 +16,7 @@ jobs:
     - name: Update System
       run: pacman -Syu --noconfirm
 
-    - name: Install Basic Dependencies
+    - name: Install Base Dependencies
       run: |
         pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg archlinux-keyring
 
@@ -26,8 +26,15 @@ jobs:
         pacman-key --lsign-key FBA220DFC880C036
         echo "[chaotic-aur]" >> /etc/pacman.conf
         echo "SigLevel = Never" >> /etc/pacman.conf
-        echo "Server = https://cdn-mirror.chaotic.cx/chaotic-aur/\$arch" >> /etc/pacman.conf
+        echo "Server = https://cdn-mirror.chaotic.cx/chaotic-aur/$arch" >> /etc/pacman.conf
         pacman -Syy --noconfirm
+
+    - name: Install Yay
+      run: |
+        git clone https://aur.archlinux.org/yay.git /tmp/yay
+        cd /tmp/yay
+        makepkg -si --noconfirm
+        cd $GITHUB_WORKSPACE
 
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -50,10 +57,17 @@ jobs:
             echo "Building package in $pkg..."
             cd "$pkg"
 
-            # makepkg will NOT sign packages
+            # Build using yay with dependencies auto-resolved
+            if ! sudo -u builder yay -G --noconfirm --noupgrade .; then
+              echo "$pkg" >> "$GITHUB_WORKSPACE/failed_packages.txt"
+              echo "Failed to fetch/build $pkg, moving on..."
+              cd "$GITHUB_WORKSPACE"
+              continue
+            fi
+
             if ! sudo -u builder makepkg -fs --noconfirm --skippgpcheck; then
               echo "$pkg" >> "$GITHUB_WORKSPACE/failed_packages.txt"
-              echo "Build failed for $pkg, moving to next..."
+              echo "Build failed for $pkg, moving on..."
             fi
 
             mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
@@ -67,7 +81,6 @@ jobs:
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-          # repo-add without signing
           repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst || true
         else
           echo "No packages built, skipping repo-add."
