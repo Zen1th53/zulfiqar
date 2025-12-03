@@ -25,17 +25,10 @@ jobs:
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         chown -R builder:builder $GITHUB_WORKSPACE
 
-    - name: Add old Arch repo snapshot
-      run: |
-        echo "[arch-archive]" >> /etc/pacman.conf
-        echo "SigLevel = Never" >> /etc/pacman.conf
-        echo "Server = https://archive.archlinux.org/repos/2024/06/01/\$repo/os/\$arch" >> /etc/pacman.conf
-        pacman -Sy
-
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install yay
+    - name: Install yay (AUR helper)
       run: |
         git clone https://aur.archlinux.org/yay.git /tmp/yay
         chown -R builder:builder /tmp/yay
@@ -46,18 +39,16 @@ jobs:
     - name: Build packages
       run: |
         mkdir -p "$GITHUB_WORKSPACE/artifacts"
-        echo "Starting build for all packages..."
+        > "$GITHUB_WORKSPACE/build-failures.txt"
 
         for pkg in "$GITHUB_WORKSPACE/packages/"*; do
           if [ -f "$pkg/PKGBUILD" ]; then
             echo "Building package in $pkg..."
             cd "$pkg"
 
-            # Builder user orqali makepkg ishlatamiz
             sudo -u builder makepkg -fs --noconfirm || echo "$pkg build failed" >> "$GITHUB_WORKSPACE/build-failures.txt"
 
             mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
-
             cd "$GITHUB_WORKSPACE"
           else
             echo "No PKGBUILD found in $pkg, skipping..."
