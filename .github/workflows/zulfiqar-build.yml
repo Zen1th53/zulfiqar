@@ -17,7 +17,7 @@ jobs:
       run: pacman -Syu --noconfirm
 
     - name: Install Dependencies
-      run: pacman -S --noconfirm base-devel git sudo pacman-contrib
+      run: pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg
 
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -27,6 +27,20 @@ jobs:
         useradd -m builder
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         chown -R builder:builder $GITHUB_WORKSPACE
+
+    - name: Initialize Pacman Keys and Chaotic AUR Key
+      run: |
+        # Initialize pacman keyring
+        pacman-key --init
+        pacman-key --populate archlinux
+        pacman-key --populate archlinux-keyring
+
+        # Chaotic AUR key
+        pacman-key --recv-keys FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+        pacman-key --lsign-key FBA220DFC880C036
+
+        # Verify keys
+        pacman-key --list-keys
 
     - name: Initialize Artifacts and Fail List
       run: |
@@ -52,12 +66,11 @@ jobs:
           fi
         done
 
-    - name: Create Repository Database
+    - name: Create Repository Database with Sign
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-          # Sign qilmasdan repo yarating
-          repo-add --remove-signature zulfiqar.db.tar.gz *.pkg.tar.zst
+          repo-add zulfiqar.db.tar.gz *.pkg.tar.zst
         else
           echo "No packages built, skipping repo-add."
         fi
