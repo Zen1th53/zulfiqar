@@ -2,9 +2,9 @@ name: Zulfiqar OS Build
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ main, master ]
 
 jobs:
   build:
@@ -13,67 +13,70 @@ jobs:
       image: archlinux:latest
 
     steps:
-    - name: Update System
+    - name: Update system
       run: pacman -Syu --noconfirm
 
-    - name: Install Base Dependencies
-      run: |
-        pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg archlinux-keyring
+    - name: Install base dependencies
+      run: pacman -S --noconfirm base-devel git sudo pacman-contrib gnupg
 
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Setup Build User
+    - name: Setup builder user
       run: |
         useradd -m builder
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         chown -R builder:builder $GITHUB_WORKSPACE
 
-    - name: Initialize Artifacts and Fail List
+    - name: Add old Arch repo snapshot
+      run: |
+        echo "[arch-archive]" >> /etc/pacman.conf
+        echo "SigLevel = Never" >> /etc/pacman.conf
+        echo "Server = https://archive.archlinux.org/repos/2024/06/01/\$repo/os/\$arch" >> /etc/pacman.conf
+        pacman -Sy
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install yay
+      run: |
+        git clone https://aur.archlinux.org/yay.git /tmp/yay
+        chown -R builder:builder /tmp/yay
+        cd /tmp/yay
+        sudo -u builder makepkg -fs --noconfirm
+        sudo pacman -U --noconfirm yay-*.pkg.tar.zst
+
+    - name: Build packages
       run: |
         mkdir -p "$GITHUB_WORKSPACE/artifacts"
-        echo "" > "$GITHUB_WORKSPACE/failed_packages.txt"
+        echo "Starting build for all packages..."
 
-    - name: Build Packages
-      run: |
         for pkg in "$GITHUB_WORKSPACE/packages/"*; do
           if [ -f "$pkg/PKGBUILD" ]; then
             echo "Building package in $pkg..."
             cd "$pkg"
 
-            # Build using yay with dependencies auto-resolved
-            if ! sudo -u builder yay -G --noconfirm --noupgrade .; then
-              echo "$pkg" >> "$GITHUB_WORKSPACE/failed_packages.txt"
-              echo "Failed to fetch/build $pkg, moving on..."
-              cd "$GITHUB_WORKSPACE"
-              continue
-            fi
-
-            if ! sudo -u builder makepkg -fs --noconfirm --skippgpcheck; then
-              echo "$pkg" >> "$GITHUB_WORKSPACE/failed_packages.txt"
-              echo "Build failed for $pkg, moving on..."
-            fi
+            # Builder user orqali makepkg ishlatamiz
+            sudo -u builder makepkg -fs --noconfirm || echo "$pkg build failed" >> "$GITHUB_WORKSPACE/build-failures.txt"
 
             mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+
             cd "$GITHUB_WORKSPACE"
           else
-            echo "No PKGBUILD in $pkg, skipping..."
+            echo "No PKGBUILD found in $pkg, skipping..."
           fi
         done
 
-    - name: Create Repository Database (Unsigned)
+    - name: Create repository database
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-          repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst || true
+          repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst
         else
           echo "No packages built, skipping repo-add."
         fi
 
-    - name: Upload Artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: zulfiqar-packages
         path: |
           artifacts/
-          failed_packages.txt
+          build-failures.txt
