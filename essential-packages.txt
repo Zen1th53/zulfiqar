@@ -1,0 +1,120 @@
+# Information Gathering
+nmap
+masscan
+recon-ng
+theharvester
+maltego
+spiderfoot
+dnsenum
+dnsmap
+fierce
+sublist3r
+amass
+whatweb
+nikto
+wafw00f
+
+# Vulnerability Analysis
+openvas
+nessus
+nexpose
+golismero
+lynis
+sqlmap
+commix
+wpscan
+joomscan
+
+# Web Application Analysis
+burpsuite
+owasp-zap
+dirb
+dirbuster
+gobuster
+wfuzz
+skipfish
+wapiti
+xsser
+
+# Database Assessment
+sqlmap
+sqlninja
+tnscmd10g
+
+# Password Attacks
+john
+hydra
+medusa
+hashcat
+ncrack
+ophcrack
+wordlists
+cewl
+crunch
+
+# Wireless Attacks
+aircrack-ng
+kismet
+wifite
+reaver
+fern-wifi-cracker
+pixiewps
+mdk3
+mdk4
+
+# Reverse Engineering
+radare2
+ghidra
+apktool
+dex2jar
+jadx
+gdb
+edb-debugger
+
+# Exploitation Tools
+metasploit
+searchsploit
+beef
+armitage
+sqlmap
+social-engineer-toolkit
+
+# Sniffing & Spoofing
+wireshark
+tcpdump
+ettercap
+bettercap
+responder
+mitmproxy
+dsniff
+macchanger
+
+# Post Exploitation
+empire
+powersploit
+mimikatz
+weevely
+
+# Forensics
+autopsy
+binwalk
+foremost
+scalpel
+volatility
+
+# Reporting
+faraday
+dradis
+serpico
+
+# Mobile
+adb
+apktool
+drozer
+
+# Zulfiqar Specific
+zulfiqar-keyring
+zulfiqar-mirrorlist
+zulfiqar-menus
+zulfiqar-config-zsh
+zulfiqar-config-bash

@@ -24,20 +24,25 @@ jobs:
       - name: Generate batch matrix
         id: set-matrix
         run: |
-          # Count total packages
-          total=$(find packages -maxdepth 1 -type d | tail -n +2 | wc -l)
+          # Count essential packages
+          if [ -f "essential-packages.txt" ]; then
+            total=$(grep -v '^#' essential-packages.txt | grep -v '^$' | wc -l)
+            echo "Using essential-packages.txt: $total packages found"
+          else
+            total=$(find packages -maxdepth 1 -type d | tail -n +2 | wc -l)
+            echo "Using all packages: $total packages found"
+          fi
+          
           batch_size=50
           batches=$(( (total + batch_size - 1) / batch_size ))
           
           echo "Total packages: $total"
           echo "Batches needed: $batches"
           
-          # Generate matrix (limit to first 10 batches for now to avoid too many jobs)
+          # Generate matrix
           matrix="["
           for i in $(seq 1 $batches); do
-            if [ $i -le 10 ]; then
-              matrix="$matrix$i,"
-            fi
+            matrix="$matrix$i,"
           done
           matrix="${matrix%,}]"
           
@@ -88,23 +93,37 @@ jobs:
         echo "BATCH $batch_num: Building packages $start to $end"
         echo "========================================="
         
-        # Get all package directories
-        all_pkgs=($(find "$GITHUB_WORKSPACE/packages" -maxdepth 1 -type d -name "*" | sort))
+        # Read essential packages list
+        if [ -f "essential-packages.txt" ]; then
+          echo "Reading essential packages list..."
+          mapfile -t essential_pkgs < <(grep -v '^#' essential-packages.txt | grep -v '^$')
+          echo "Found ${#essential_pkgs[@]} essential packages to build"
+        else
+          echo "Warning: essential-packages.txt not found, building ALL packages"
+          essential_pkgs=($(find "$GITHUB_WORKSPACE/packages" -maxdepth 1 -type d -name "*" -printf "%f\n"))
+        fi
         
         current=0
         success=0
         failed=0
+        skipped=0
         
-        for pkg in "${all_pkgs[@]}"; do
-          current=$((current + 1))
+        for pkg_name in "${essential_pkgs[@]}"; do
+          pkg="$GITHUB_WORKSPACE/packages/$pkg_name"
           
-          # Skip if not in this batch
-          if [ $current -lt $start ] || [ $current -gt $end ]; then
+          if [ ! -d "$pkg" ]; then
+            echo "Warning: Package $pkg_name not found in packages directory"
             continue
           fi
           
           if [ -f "$pkg/PKGBUILD" ]; then
-            pkg_name=$(basename "$pkg")
+            current=$((current + 1))
+            
+            # Check batch range
+            if [ $current -lt $start ] || [ $current -gt $end ]; then
+              continue
+            fi
+            
             echo "========================================="
             echo "[$current] Building: $pkg_name"
             echo "========================================="
