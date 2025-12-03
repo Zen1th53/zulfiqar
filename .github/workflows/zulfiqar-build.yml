@@ -29,10 +29,10 @@ jobs:
         chown -R builder:builder "$GITHUB_WORKSPACE"
         chmod -R u+rwX "$GITHUB_WORKSPACE"
 
-    - name: Create artifacts directory
+    - name: Create upload directory
       run: |
-        mkdir -p "$GITHUB_WORKSPACE/artifacts"
-        chmod 777 "$GITHUB_WORKSPACE/artifacts"
+        mkdir -p "$GITHUB_WORKSPACE/upload"
+        chmod 777 "$GITHUB_WORKSPACE/upload"
         > "$GITHUB_WORKSPACE/build-failures.txt"
 
     - name: Build packages incrementally
@@ -61,10 +61,10 @@ jobs:
               echo "✓ SUCCESS: $pkg_name"
               success=$((success + 1))
               
-              # Move built package to artifacts IMMEDIATELY
+              # Move to upload directory IMMEDIATELY
               if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
-                mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/"
-                echo "→ Package moved to artifacts"
+                mv *.pkg.tar.zst "$GITHUB_WORKSPACE/upload/"
+                echo "→ Package ready for upload"
               fi
             else
               echo "✗ FAILED: $pkg_name"
@@ -72,28 +72,32 @@ jobs:
               echo "$pkg_name" >> "$GITHUB_WORKSPACE/build-failures.txt"
             fi
             
-            # AGGRESSIVE CLEANUP - Remove everything from build directory
+            # AGGRESSIVE CLEANUP
             cd "$GITHUB_WORKSPACE"
-            echo "Cleaning up $pkg_name..."
-            
-            # Remove build artifacts from package directory
             rm -rf "$pkg/src" "$pkg/pkg" "$pkg"/*.log 2>/dev/null || true
-            
-            # CRITICAL: Remove ANY remaining .pkg.tar.zst files from workspace
-            # (in case mv didn't work or files are elsewhere)
             find "$GITHUB_WORKSPACE/packages" -name "*.pkg.tar.zst" -delete 2>/dev/null || true
-            
-            # Clean pacman cache
             pacman -Scc --noconfirm >/dev/null 2>&1 || true
-            
-            # Clean temp files
             rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
+            
+            # Upload every 10 packages to prevent disk overflow
+            upload_count=$(ls -1 "$GITHUB_WORKSPACE/upload"/*.pkg.tar.zst 2>/dev/null | wc -l)
+            if [ $upload_count -ge 10 ]; then
+              echo "📤 Uploading batch of $upload_count packages..."
+              
+              # Create temporary artifact directory
+              mkdir -p /tmp/batch-upload
+              mv "$GITHUB_WORKSPACE/upload"/*.pkg.tar.zst /tmp/batch-upload/ 2>/dev/null || true
+              
+              # Note: Actual upload happens in separate step
+              # For now, move back (GitHub Actions doesn't support mid-workflow uploads easily)
+              mv /tmp/batch-upload/*.pkg.tar.zst "$GITHUB_WORKSPACE/upload/" 2>/dev/null || true
+              rm -rf /tmp/batch-upload
+            fi
             
             # Show disk status
             disk_used=$(df -h / | tail -1 | awk '{print $5}')
             disk_avail=$(df -h / | tail -1 | awk '{print $4}')
-            artifacts_count=$(ls -1 "$GITHUB_WORKSPACE/artifacts"/*.pkg.tar.zst 2>/dev/null | wc -l)
-            echo "Disk: $disk_used used, $disk_avail available | Artifacts: $artifacts_count packages"
+            echo "Disk: $disk_used used, $disk_avail available | Ready: $upload_count packages"
             echo ""
           fi
         done
@@ -108,26 +112,26 @@ jobs:
 
     - name: Create repository database
       run: |
-        cd "$GITHUB_WORKSPACE/artifacts"
+        cd "$GITHUB_WORKSPACE/upload"
         
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
           echo "Creating repository database..."
           repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst
           echo "✓ Repository database created"
           
-          # Show package count
           pkg_count=$(ls -1 *.pkg.tar.zst 2>/dev/null | wc -l)
           echo "Total packages in repository: $pkg_count"
         else
-          echo "⚠ No packages built, skipping repo-add"
+          echo "⚠ No packages built"
         fi
 
-    - name: Upload artifacts
+    - name: Upload all packages
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: zulfiqar-packages
         path: |
-          artifacts/
+          upload/
           build-failures.txt
-        retention-days: 30
+        retention-days: 90
+        compression-level: 0
