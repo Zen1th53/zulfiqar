@@ -23,7 +23,9 @@ jobs:
       run: |
         useradd -m builder
         echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-        chown -R builder:builder $GITHUB_WORKSPACE
+        # GITHUB_WORKSPACE ham builderga tegishli qilinadi
+        chown -R builder:builder "$GITHUB_WORKSPACE"
+        chmod -R u+rwx "$GITHUB_WORKSPACE"
 
     - name: Checkout code
       uses: actions/checkout@v4
@@ -39,6 +41,7 @@ jobs:
     - name: Build packages
       run: |
         mkdir -p "$GITHUB_WORKSPACE/artifacts"
+        chmod -R u+rwx "$GITHUB_WORKSPACE/artifacts"
         > "$GITHUB_WORKSPACE/build-failures.txt"
 
         for pkg in "$GITHUB_WORKSPACE/packages/"*; do
@@ -58,6 +61,7 @@ jobs:
     - name: Create repository database
       run: |
         cd "$GITHUB_WORKSPACE/artifacts"
+        chmod -R u+rwx "$GITHUB_WORKSPACE/artifacts"
         if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
           repo-add -n -R zulfiqar.db.tar.gz *.pkg.tar.zst
         else
