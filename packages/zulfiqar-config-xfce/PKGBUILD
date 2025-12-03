@@ -1,0 +1,33 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-xfce
+pkgver=15.996cb2d
+pkgrel=1
+pkgdesc='Zulfiqar OS theme and config for xfce desktop enviroment.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-xfce'
+license=('custom:unknown')
+depends=('zulfiqar-menus')
+makedepends=('git')
+source=("git+https://github.com/Zulfiqar OS/$pkgname.git")
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 644 "$pkgdir/etc/skel/.config"
+  install -dm 755 "$pkgdir/usr/share/themes/zulfiqar-xfce"
+  install -Dm 644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md
+
+  cp -a xfce-config/* "$pkgdir/etc/skel/.config"
+  cp -a theme/* "$pkgdir/usr/share/themes/zulfiqar-xfce/"
+}
+

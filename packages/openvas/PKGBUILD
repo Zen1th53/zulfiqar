@@ -1,0 +1,41 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=openvas
+pkgver=20250606
+pkgrel=1
+pkgdesc='Meta package for installing all OpenVAS components.'
+arch=('x86_64')
+groups=('zulfiqar' 'zulfiqar-scanner' 'zulfiqar-recon' 'zulfiqar-fuzzer'
+        'zulfiqar-fingerprint' 'zulfiqar-webapp' 'zulfiqar-dos')
+url='https://zulfiqar.os/'
+license=('custom:unknown')
+if [[ $CARCH == "x86_64" ]]; then
+  depends=(
+    'gsa'
+    'gsad'
+    'gvmd'
+    'gvm-libs'
+    'openvas-scanner'
+    'ospd-openvas'
+    'pg-gvm'
+    'greenbone-feed-sync'
+  )
+elif [[ $CARCH = "aarch64" ]]; then
+  depends=(
+    'gsa'
+    'gsad'
+    'gvmd'
+    'gvm-libs'
+    'openvas-scanner'
+    'ospd-openvas'
+    'pg-gvm'
+    'greenbone-feed-sync'
+  )
+fi
+
+package() {
+  # Nothing to do here, this is a meta-package.
+  :
+}
+

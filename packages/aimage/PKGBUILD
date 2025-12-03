@@ -1,0 +1,32 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=aimage
+pkgver=3.3.0
+pkgrel=1
+pkgdesc='A tool to create aff-images.'
+arch=('x86_64' 'aarch64')
+groups=('zulfiqar' 'zulfiqar-forensic')
+url='https://pkgs.fedoraproject.org/repo/pkgs/aimage/'
+license=('custom')
+depends=('afflib' 'openssl' 'readline')
+source=("https://github.com/Obsidian-Covenant/aimage/archive/refs/tags/$pkgver.tar.gz")
+sha512sums=('3cf981eea9352259e028884937a1bf22429c4a9ab5504ef15138d5049c659a3ec40866868f534aa555a42cae126043cf6bc55aa56ffbb8688c2f5f7ed2ce8c0f')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  autoreconf -i
+  ./configure --prefix=/usr --sysconfdir=/etc
+
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  make DESTDIR="$pkgdir" install
+
+  install -Dm 644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+

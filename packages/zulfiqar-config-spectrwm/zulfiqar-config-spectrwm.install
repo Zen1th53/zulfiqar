@@ -1,0 +1,11 @@
+post_install() {
+  echo
+  echo "  >> To use Zulfiqar OS spectrwm config move the following files:"
+  echo "      /usr/share/zulfiqar/config/spectrwm/spectrwm.conf  -> ~/.spectrwm.conf"
+  echo
+}
+
+post_upgrade() {
+  post_install
+}
+

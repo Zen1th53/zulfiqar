@@ -1,0 +1,31 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-bash
+pkgver=11.b2b10c8
+pkgrel=2
+pkgdesc='Zulfiqar OS config for the bash shell.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-bash'
+license=('custom:unknown')
+depends=('bash')
+makedepends=('git')
+source=('git+https://github.com/Zulfiqar OS/zulfiqar-config-bash.git')
+sha512sums=('SKIP')
+install="$pkgname.install"
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/bash"
+
+  cp -a bashrc bash_profile "$pkgdir/usr/share/zulfiqar/config/bash/"
+}
+

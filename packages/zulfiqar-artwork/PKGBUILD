@@ -1,0 +1,32 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-artwork
+pkgver=80.fc42f1e
+pkgrel=1
+pkgdesc='Artwork for Zulfiqar OS Linux.'
+arch=('any')
+url='https://github.com/Zulfiqar OS/zulfiqar-artwork'
+license=('custom:unknown')
+makedepends=('git')
+source=('git+https://github.com/Zulfiqar OS/zulfiqar-artwork.git')
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/artwork"
+
+  install -Dm 644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md AUTHORS
+
+  rm README.md AUTHORS
+
+  cp -a * "$pkgdir/usr/share/zulfiqar/artwork/"
+}
+

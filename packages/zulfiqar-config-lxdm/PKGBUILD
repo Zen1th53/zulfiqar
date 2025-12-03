@@ -1,0 +1,40 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-lxdm
+pkgver=20.b109457
+pkgrel=1
+pkgdesc='Zulfiqar OS config for lxdm X11 login manager.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-lxdm'
+license=('custom')
+depends=('lxdm' 'zulfiqar-wallpaper' 'terminus-font')
+makedepends=('git')
+source=('git+https://github.com/Zulfiqar OS/zulfiqar-config-lxdm.git')
+sha512sums=('SKIP')
+install="$pkgname.install"
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/etc/lxdm-zulfiqar/"
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/"
+  install -dm 755 "$pkgdir/usr/share/lxdm-zulfiqar/"
+  install -dm 755 "$pkgdir/usr/share/xsessions-zulfiqar/"
+
+  cp -p -r etc/lxdm/* "$pkgdir/etc/lxdm-zulfiqar/"
+  cp -p -r usr/share/zulfiqar/* "$pkgdir/usr/share/zulfiqar/"
+  cp -p -r usr/share/lxdm/* "$pkgdir/usr/share/lxdm-zulfiqar/"
+  cp -p -r usr/share/xsessions/* "$pkgdir/usr/share/xsessions-zulfiqar/"
+
+  #wallpaper.png clashes with zulfiqar-wallpaper dependency
+  mv $pkgdir/usr/share/zulfiqar/wallpaper{,-cyberpunk}.png
+}
+

@@ -1,0 +1,23 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=windows-binaries
+pkgver=20.7d272da
+pkgrel=2
+pkgdesc='A colleciton of pentesting Windows binaries.'
+arch=('any')
+groups=('zulfiqar' 'zulfiqar-windows')
+url='https://github.com/Zulfiqar OS/windows-binaries'
+license=('custom:unknown')
+makedepends=('git')
+source=("git+https://github.com/zulfiqar/$pkgname.git")
+sha512sums=('SKIP')
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/windows/$pkgname"
+
+  cp -a * "$pkgdir/usr/share/windows/$pkgname/"
+}
+

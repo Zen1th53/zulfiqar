@@ -1,0 +1,7 @@
+repos/zulfiqar/scripts/up-officials &&
+  ssh zulfiqar.org -l root 'date +%s > /var/www/zulfiqar/zulfiqar/lastupdate' &&
+  yay -Syyu &&
+  sysclean.sh &&
+  ./git.sh get &&
+  cd repos/zulfiqar/lists &&
+  git add . ; git commit -m 'to-release-arm: add packages' . ; git push

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+feh -z -Z --bg-scale /usr/share/zulfiqar/wallpaper.jpg
+while true
+do
+  xsetroot -name "Zulfiqar OS - $(date +"%a %b %d %r")"
+  sleep 1
+done &
+exec dwm

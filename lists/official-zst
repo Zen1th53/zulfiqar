@@ -1,0 +1,22 @@
+bind-tools zulfiqar-networking zulfiqar-recon
+dcfldd zulfiqar-forensic
+exploitdb zulfiqar-exploitation
+findomain zulfiqar-recon
+gnuradio zulfiqar-wireless
+gqrx zulfiqar-wireless
+hcxdumptool zulfiqar-wireless zulfiqar-sniffer
+hcxtools zulfiqar-wireless
+jadx zulfiqar-decompiler zulfiqar-reversing
+kismet zulfiqar-wireless zulfiqar-sniffer
+lldb zulfiqar-debugger
+metasploit zulfiqar-exploitation zulfiqar-fuzzer zulfiqar-scanner zulfiqar-recon zulfiqar-networking
+scrapy zulfiqar-webapp zulfiqar-recon zulfiqar-scanner
+shellcheck zulfiqar-code-audit
+sqlmap zulfiqar-webapp zulfiqar-exploitation zulfiqar-fuzzer
+sshtunnel zulfiqar-tunnel zulfiqar-networking
+veracrypt zulfiqar-crypto zulfiqar-defensive
+wavemon zulfiqar-wireless
+wireshark-cli zulfiqar-sniffer zulfiqar-networking
+wireshark-qt zulfiqar-sniffer zulfiqar-networking
+wpscan zulfiqar-webapp zulfiqar-fuzzer zulfiqar-scanner
+zaproxy zulfiqar-webapp zulfiqar-proxy zulfiqar-fuzzer

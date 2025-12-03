@@ -1,0 +1,11 @@
+post_install() {
+  echo
+  echo "  >> To use Zulfiqar OS awesome config copy the following files:"
+  echo "      /usr/share/zulfiqar/config/awesome/etc/xdg/awesome/rc.lua.zulfiqar -> /etc/xdg/awesome/rc.lua"
+  echo "      /usr/share/zulfiqar/config/awesome/usr/share/awesome/themes/zulfiqar -> /usr/share/awesome/themes/"
+  echo
+}
+
+post_upgrade() {
+  post_install
+}

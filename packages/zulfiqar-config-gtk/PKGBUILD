@@ -1,0 +1,31 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-gtk
+pkgver=4.f9f6a21
+pkgrel=3
+pkgdesc='Zulfiqar OS config for gtk-2.0.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-gtk'
+license=('custom')
+depends=('feh' 'zulfiqar-wallpaper')
+makedepends=('git')
+source=('git+https://github.com/Zulfiqar OS/zulfiqar-config-gtk.git')
+install='zulfiqar-config-gtk.install'
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/gtk-2.0"
+
+  cp -a * "$pkgdir/usr/share/zulfiqar/config/gtk-2.0"
+}
+

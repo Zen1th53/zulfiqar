@@ -1,0 +1,30 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-zsh
+pkgver=12.1ee1abb
+pkgrel=2
+pkgdesc='Zulfiqar OS config for the zsh shell.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-zsh'
+license=('custom:unknown')
+depends=('zsh')
+makedepends=('git')
+source=("git+https://github.com/Zulfiqar OS/$pkgname.git")
+install="$pkgname.install"
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/zsh"
+  install -Dm 644 zshrc "$pkgdir/usr/share/zulfiqar/config/zsh"
+}
+

@@ -1,0 +1,32 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-awesome
+pkgver=49.ea88207
+pkgrel=1
+pkgdesc='Zulfiqar OS menu, theme and config for awesome window manager.'
+groups=('zulfiqar-config')
+arch=('any')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-awesome'
+license=('custom')
+depends=('awesome' 'feh' 'zulfiqar-wallpaper' 'terminus-font-ttf'
+         'rxvt-unicode')
+makedepends=('git')
+source=("git+https://github.com/Zulfiqar OS/$pkgname.git")
+sha512sums=('SKIP')
+install="$pkgname.install"
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/awesome"
+
+  cp -a * "$pkgdir/usr/share/zulfiqar/config/awesome"
+}
+

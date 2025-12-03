@@ -1,0 +1,31 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-spectrwm
+pkgver=8.ee5d156
+pkgrel=2
+pkgdesc='Zulfiqar OS menu, theme and config for spectrwm window manager.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-spectrwm'
+license=('custom')
+depends=('spectrwm' 'feh' 'zulfiqar-wallpaper' 'terminus-font' 'rxvt-unicode')
+makedepends=('git')
+source=('git+https://github.com/Zulfiqar OS/zulfiqar-config-spectrwm.git')
+sha512sums=('SKIP')
+install="$pkgname.install"
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/spectrwm"
+  install -Dm 644 -t "$pkgdir/usr/share/zulfiqar/config/spectrwm/" \
+    spectrwm.conf
+}
+

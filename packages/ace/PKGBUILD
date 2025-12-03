@@ -1,0 +1,27 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=ace
+pkgver=1.11
+pkgrel=1
+groups=('zulfiqar' 'zulfiqar-voip')
+pkgdesc='A simple yet powerful VoIP Corporate Directory enumeration tool that mimics the behavior of an IP Phone in order to download the name and extension entries that a given phone can display on its screen interface.'
+url='https://ucsniff.sourceforge.net/ace.html'
+license=('GPL-3.0-or-later')
+depends=('libpcap' 'libtirpc')
+arch=('x86_64' 'aarch64')
+source=("https://github.com/Obsidian-Covenant/ace/archive/refs/tags/$pkgver.tar.gz")
+sha512sums=('48d63ec9dcf30dc867f7e4c1a8948ee5f94ee0345cec9978bc16a1890ce6b437f2688407a45d9f563d608d18369bec2039fa96709a3662d4478719ed6f930311')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  install -Dm 755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+}
+

@@ -1,0 +1,33 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=javasnoop
+pkgver=1.1
+pkgrel=8
+groups=('zulfiqar' 'zulfiqar-reversing')
+pkgdesc='A tool that lets you intercept methods, alter data and otherwise hack Java applications running on your computer.'
+url='https://code.google.com/p/javasnoop/'
+arch=('any')
+license=('GPL-3.0-only')
+depends=('java-environment')
+#source=("https://javasnoop.googlecode.com/files/JavaSnoop-$pkgver-RC2.zip")
+source=("https://web.archive.org/web/20220706160705/https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/javasnoop/JavaSnoop-$pkgver-RC2.zip")
+sha512sums=('4d03971e6c2b22ec9efb3757306a9c1fd7c16f005c60b159b9980cf23671569709441f4768c2c9929d6c89b27ee6ebb5244dad7e35959344f26c2d9920a5110a')
+
+package(){
+  cd JavaSnoop
+
+  install -dm 755 "$pkgdir/usr/bin"
+  install -dm 755 "$pkgdir/usr/share/$pkgname"
+
+  cp -a --no-preserve=ownership * "$pkgdir/usr/share/$pkgname/"
+
+  cat > "$pkgdir/usr/bin/$pkgname" << EOF
+#!/bin/sh
+cd /usr/share/$pkgname
+exec bash startup.sh
+EOF
+
+  chmod +x "$pkgdir/usr/bin/$pkgname"
+}
+

@@ -1,0 +1,11 @@
+post_install() {
+  echo
+  echo "  >> To use Zulfiqar OS VIM config move the following files:"
+  echo "      /usr/share/zulfiqar/config/vim/vim          -> ~/.vim"
+  echo "      /usr/share/zulfiqar/config/vim/vimrc        -> ~/.vimrc"
+  echo
+}
+
+post_upgrade() {
+  post_install
+}

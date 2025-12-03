@@ -1,0 +1,20 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=kerbcrack
+pkgver=1.3d3
+pkgrel=2
+pkgdesc='Kerberos sniffer and cracker for Windows.'
+url='https://vidstromlabs.com/freetools/kerbcrack/'
+groups=('zulfiqar' 'zulfiqar-windows' 'zulfiqar-sniffer' 'zulfiqar-cracker')
+license=('custom:unknown')
+arch=('any')
+source=("https://vidstromlabs.com/downloads/$pkgname.zip")
+sha512sums=('84cbaf2c16b93d49bd4fdd7e621c072d9b8db4a9')
+
+package() {
+  rm "$pkgname.zip"
+
+  install -Dm 644 -t "$pkgdir/usr/share/windows/$pkgname/" *
+}
+

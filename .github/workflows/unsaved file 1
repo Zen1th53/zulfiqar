@@ -1,0 +1,64 @@
+name: Zulfiqar OS Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+    - name: Update System
+      run: pacman -Syu --noconfirm
+
+    - name: Install Dependencies
+      run: pacman -S --noconfirm base-devel git sudo pacman-contrib
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Build User
+      run: |
+        useradd -m builder
+        echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+        chown -R builder:builder $GITHUB_WORKSPACE
+
+    - name: Build Packages
+      run: |
+        mkdir -p "$GITHUB_WORKSPACE/artifacts"
+        echo "Starting build for all packages..."
+
+        for pkg in "$GITHUB_WORKSPACE/packages/"*; do
+          if [ -f "$pkg/PKGBUILD" ]; then
+            echo "Building package in $pkg..."
+            cd "$pkg"
+
+            sudo -u builder makepkg -fs --noconfirm || echo "Build failed for $pkg"
+
+            mv *.pkg.tar.zst "$GITHUB_WORKSPACE/artifacts/" 2>/dev/null || true
+
+            cd "$GITHUB_WORKSPACE"
+          else
+            echo "No PKGBUILD found in $pkg, skipping..."
+          fi
+        done
+
+    - name: Create Repository Database
+      run: |
+        cd "$GITHUB_WORKSPACE/artifacts"
+        if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+          repo-add zulfiqar.db.tar.gz *.pkg.tar.zst
+        else
+          echo "No packages built, skipping repo-add."
+        fi
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: zulfiqar-packages
+        path: artifacts/

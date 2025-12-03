@@ -1,0 +1,150 @@
+afl zulfiqar-fuzzer zulfiqar-binary
+afpfs-ng zulfiqar-networking zulfiqar-misc
+aircrack-ng zulfiqar-wireless
+arduino zulfiqar-hardware
+argon2 zulfiqar-crypto zulfiqar-defensive
+arp-scan zulfiqar-networking zulfiqar-scanner zulfiqar-fingerprint
+atftp zulfiqar-networking
+batctl zulfiqar-wireless
+bettercap zulfiqar-sniffer zulfiqar-networking
+binwalk zulfiqar-disassembler zulfiqar-firmware zulfiqar-reversing zulfiqar-binary
+bully zulfiqar-wireless zulfiqar-cracker
+cadaver zulfiqar-networking
+capstone zulfiqar-reversing zulfiqar-disassembler
+checksec zulfiqar-automation zulfiqar-scanner
+chntpw zulfiqar-forensic zulfiqar-cracker
+corkscrew zulfiqar-tunnel zulfiqar-proxy zulfiqar-networking
+cowpatty zulfiqar-wireless zulfiqar-cracker
+cppcheck zulfiqar-code-audit
+create_ap zulfiqar-wireless
+darkstat zulfiqar-sniffer zulfiqar-networking
+ddrescue zulfiqar-forensic
+distorm zulfiqar-disassembler zulfiqar-reversing
+dmg2img zulfiqar-forensic zulfiqar-misc
+dnstracer zulfiqar-recon
+dscanner zulfiqar-code-audit
+dsniff zulfiqar-sniffer zulfiqar-networking
+elfkickers zulfiqar-binary
+etherape zulfiqar-networking zulfiqar-sniffer
+ettercap zulfiqar-sniffer zulfiqar-networking
+evilginx zulfiqar-social
+extundelete zulfiqar-forensic
+fcrackzip zulfiqar-cracker
+findmyhash zulfiqar-crypto
+flawfinder zulfiqar-code-audit
+foremost zulfiqar-forensic
+fping zulfiqar-networking zulfiqar-recon zulfiqar-scanner
+freeradius zulfiqar-wireless
+gdb zulfiqar-debugger
+gdb-common zulfiqar-debugger
+geoip zulfiqar-networking zulfiqar-recon
+greenbone-security-assistant zulfiqar-scanner zulfiqar-fuzzer zulfiqar-exploitation
+hackrf zulfiqar-radio
+hashcat zulfiqar-cracker
+hashcat-utils zulfiqar-misc
+hashdeep zulfiqar-crypto
+hcxkeys zulfiqar-crypto
+hexyl zulfiqar-misc
+hping zulfiqar-networking
+httping zulfiqar-networking zulfiqar-recon
+httptunnel zulfiqar-tunnel
+httrack zulfiqar-misc
+hydra zulfiqar-cracker
+impacket zulfiqar-networking
+iodine zulfiqar-tunnel
+ipmitool zulfiqar-networking
+iputils zulfiqar-networking
+jad zulfiqar-reversing
+jhead zulfiqar-defensive
+john zulfiqar-cracker
+kcptun zulfiqar-tunnel
+libpst zulfiqar-misc
+lorcon zulfiqar-wireless
+lynis zulfiqar-scanner
+macchanger zulfiqar-networking zulfiqar-misc
+masscan zulfiqar-scanner
+mdk3 zulfiqar-wireless zulfiqar-fuzzer
+medusa zulfiqar-cracker
+mfoc zulfiqar-cracker zulfiqar-wireless
+mitmproxy zulfiqar-proxy zulfiqar-exploitation
+mtr zulfiqar-networking
+multimon-ng zulfiqar-radio
+nbtscan zulfiqar-scanner zulfiqar-recon
+ncrack zulfiqar-cracker
+netsniff-ng zulfiqar-sniffer
+ngrep zulfiqar-networking
+nikto zulfiqar-scanner zulfiqar-webapp zulfiqar-fuzzer
+nmap zulfiqar-scanner
+gvmd zulfiqar-scanner zulfiqar-fuzzer zulfiqar-exploitation
+open-iscsi zulfiqar-misc
+openvas zulfiqar-scanner zulfiqar-fuzzer zulfiqar-exploitation
+ophcrack zulfiqar-cracker
+p0f zulfiqar-fingerprint zulfiqar-sniffer
+packer zulfiqar-binary
+packeth zulfiqar-networking
+pdfcrack zulfiqar-cracker
+peda zulfiqar-debugger zulfiqar-exploitation
+perl-image-exiftool zulfiqar-forensic zulfiqar-defensive
+pixiewps zulfiqar-wireless zulfiqar-cracker
+proxychains-ng zulfiqar-proxy
+proxytunnel zulfiqar-tunnel zulfiqar-proxy
+ptunnel zulfiqar-tunnel zulfiqar-networking
+pwndbg zulfiqar-debugger
+pyrit zulfiqar-cracker zulfiqar-wireless
+python2-yara zulfiqar-malware
+python-capstone zulfiqar-reversing zulfiqar-disassembler
+python-jsbeautifier zulfiqar-reversing zulfiqar-webapp
+radamsa zulfiqar-fuzzer
+radare2 zulfiqar-reversing zulfiqar-decompiler zulfiqar-disassembler zulfiqar-debugger
+radare2-cutter zulfiqar-reversing zulfiqar-decompiler zulfiqar-disassembler zulfiqar-debugger
+reaver zulfiqar-wireless zulfiqar-cracker
+rfdump zulfiqar-wireless
+rkhunter zulfiqar-forensic zulfiqar-defensive
+ropgadget zulfiqar-exploitation
+ropper zulfiqar-exploitation zulfiqar-binary
+routersploit zulfiqar-exploitation
+scanmem zulfiqar-reversing
+scapy zulfiqar-networking
+siege zulfiqar-dos
+sleuthkit zulfiqar-forensic
+slowhttptest zulfiqar-dos
+smali zulfiqar-disassembler zulfiqar-hardware
+sniffglue zulfiqar-sniffer
+socat zulfiqar-networking
+splint zulfiqar-code-audit
+ssdeep zulfiqar-crypto
+sshuttle zulfiqar-proxy zulfiqar-networking
+sslh zulfiqar-networking
+sslscan zulfiqar-scanner zulfiqar-crypto
+steghide zulfiqar-anti-forensic
+strace zulfiqar-binary
+stunnel zulfiqar-networking zulfiqar-tunnel
+subbrute zulfiqar-scanner
+swaks zulfiqar-networking
+sysdig zulfiqar-recon
+tcpdump zulfiqar-networking zulfiqar-sniffer
+tcpflow zulfiqar-networking zulfiqar-sniffer
+tcpreplay zulfiqar-networking
+tcptrace zulfiqar-networking
+testdisk zulfiqar-forensic
+testssl.sh zulfiqar-crypto zulfiqar-scanner
+thc-ipv6 zulfiqar-networking zulfiqar-recon zulfiqar-dos zulfiqar-spoof zulfiqar-scanner
+tinc zulfiqar-networking
+tinyproxy zulfiqar-proxy
+tor zulfiqar-proxy zulfiqar-tunnel zulfiqar-networking
+torsocks zulfiqar-proxy
+traceroute zulfiqar-recon
+truecrypt zulfiqar-defensive
+udp2raw-tunnel zulfiqar-tunnel zulfiqar-networking
+unhide zulfiqar-forensic
+upx zulfiqar-binary zulfiqar-misc
+urh zulfiqar-radio
+valabind zulfiqar-misc
+valgrind zulfiqar-binary zulfiqar-code-audit
+volatility zulfiqar-forensic
+vulscan zulfiqar-scanner zulfiqar-fuzzer
+wifite zulfiqar-wireless zulfiqar-cracker
+yara zulfiqar-malware
+zmap zulfiqar-scanner
+zssh zulfiqar-networking zulfiqar-misc
+zzuf zulfiqar-fuzzer

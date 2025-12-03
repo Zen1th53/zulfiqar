@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ ! -t 0 ]] ; then
+	pass=$'\n'$(cat)
+fi
+
+cat <<EOF
+# This file is part of Zulfiqar OS Linux ( http://zulfiqar.org ).
+# See COPYING for license details.
+$pass
+EOF

@@ -1,0 +1,31 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-x11
+pkgver=21.e38cf84
+pkgrel=1
+pkgdesc='Zulfiqar OS config for the X11 user settings.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-x11'
+license=('custom:unknown')
+depends=('xterm' 'rxvt-unicode' 'terminus-font')
+makedepends=('git')
+source=("git+https://github.com/Zulfiqar OS/$pkgname.git")
+sha512sums=('SKIP')
+install="$pkgname.install"
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/x11"
+
+  cp -a * "$pkgdir/usr/share/zulfiqar/config/x11/"
+}
+

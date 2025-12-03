@@ -1,0 +1,31 @@
+# This file is part of Zulfiqar OS ( https://zulfiqar.os/ ).
+# See COPYING for license details.
+
+pkgname=zulfiqar-config-fluxbox
+pkgver=41.a172928
+pkgrel=1
+pkgdesc='Zulfiqar OS menu, theme and config for fluxbox window manager.'
+arch=('any')
+groups=('zulfiqar-config')
+url='https://github.com/Zulfiqar OS/zulfiqar-config-fluxbox'
+license=('custom')
+depends=('fluxbox' 'feh' 'zulfiqar-wallpaper' 'terminus-font' 'rxvt-unicode')
+makedepends=('git')
+source=("git+https://github.com/Zulfiqar OS/$pkgname.git")
+sha512sums=('SKIP')
+install="$pkgname.install"
+
+pkgver() {
+  cd $pkgname
+
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+
+  install -dm 755 "$pkgdir/usr/share/zulfiqar/config/fluxbox"
+
+  cp -a usr/share/fluxbox/* "$pkgdir/usr/share/zulfiqar/config/fluxbox"
+}
+
